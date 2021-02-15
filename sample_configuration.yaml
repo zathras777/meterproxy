@@ -1,0 +1,45 @@
+# Name
+name: Meter
+# MQTT data
+mqtt:
+  host: localhost
+  port: 1883
+  qos: 1
+  topic_prefix: electric
+  hassdiscovery_prefix: homeassistant
+# Source. Data that is recorded.
+source:
+  device_id: 1
+  fields:
+  - name: Active Load
+    units: W
+    idx: 12
+  - name: Apparent Load
+    units: W
+    idx: 18
+  - name: Reactive Load
+    units: W
+    idx: 24
+  - name: Power Factor
+    units: "%"
+    idx: 30
+# The server connection
+server:
+  devicename: "/dev/ttyUSB0"
+  baudrate: 9600
+  parity: N
+# More than one client could be configured.
+clients:
+- devicename: "/dev/ttyUSB1"
+  baudrate: 9600
+  parity: N
+  devices:
+  - id: 1
+    # Each client reads a range of registers and stores them for access by the server.
+    ranges:
+    - start: 40001
+      finish: 40030
+      delay: 100
+    - start: 30011
+      finish: 30081
+      delay: 100
