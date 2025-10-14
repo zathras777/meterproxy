@@ -75,6 +75,6 @@ func parseConfiguration(cfgFn string) (err error) {
 		newFields = append(newFields, fld)
 	}
 	appConfig.Source.Fields = newFields
-	fmt.Println(appConfig)
+	//fmt.Println(appConfig)
 	return
 }

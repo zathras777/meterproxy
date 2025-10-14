@@ -14,13 +14,15 @@ const DEV_PATH = "/sys/bus/usb/devices"
 var (
 	devRe            regexp.Regexp = *regexp.MustCompile(`[0-9]-[0-9]`)
 	usbSerialDevices               = make(map[string]bool, 10)
+	usbSerialRe                    = regexp.MustCompile(`(?i)usb.*serial|serial.*usb`)
 )
 
 func findUSBSerialDevices() {
 	files, err := filepath.Glob(filepath.Join(DEV_PATH, "usb*"))
 	if err != nil {
-		log.Fatal("No USB devices available?")
+		log.Fatal("No USB devices available: %v", err)
 	}
+
 	for _, poss := range files {
 		productFnGlob := filepath.Join(poss, "*", "product")
 		files, err := filepath.Glob(productFnGlob)
@@ -29,11 +31,11 @@ func findUSBSerialDevices() {
 		}
 		for _, prodFn := range files {
 			product := readFile(prodFn)
-			if product != "USB Serial" {
+			if !usbSerialRe.MatchString(product) {
 				continue
 			}
 			ttyGlob := filepath.Join(filepath.Dir(prodFn), "*:*", "tty*")
-			//		fmt.Printf("Looking for TTY's: %s\n", ttyGlob)
+			//fmt.Printf("Looking for TTY's: %s\n", ttyGlob)
 			ttys, err := filepath.Glob(ttyGlob)
 			if err != nil || len(ttys) == 0 {
 				continue

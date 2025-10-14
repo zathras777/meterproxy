@@ -1,6 +1,6 @@
 module github.com/zathras777/meterproxy
 
-go 1.25
+go 1.24
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.3.2
