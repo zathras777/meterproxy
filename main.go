@@ -24,6 +24,12 @@ func main() {
 
 	fmt.Printf("Meter Proxy. Reading configuration from %s\n", cfgFn)
 
+	findUSBSerialDevices()
+	if len(usbSerialDevices) == 0 {
+		fmt.Println("Unable to find any suitable USB devices? Exiting...")
+		os.Exit(1)
+	}
+
 	logwriter, e := syslog.New(syslog.LOG_DEBUG|syslog.LOG_DAEMON, "meterproxy")
 	if e == nil {
 		log.SetOutput(logwriter)

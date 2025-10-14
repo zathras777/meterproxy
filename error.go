@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 // Exception codes.
 //type modbusError byte
 
@@ -79,5 +77,5 @@ var (
 )
 
 func (err modbusError) Error() string {
-	return fmt.Sprintf(err.desc)
+	return err.desc
 }

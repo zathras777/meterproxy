@@ -23,14 +23,18 @@ func execute() (err error) {
 		return
 	}
 
+	client := mqttClient
 	for _, fld := range appConfig.Source.Fields {
 		data, err := regA.Read(fld.Idx, 2)
 		if err != modbusSuccess {
 			log.Printf("Unable to access index %d: %s", fld.Idx, err)
 			continue
 		}
+		if client == nil || !client.IsConnected() {
+			continue
+		}
 		val.FormatBytes("ieee32", data[1:])
-		token := mqttClient.Publish(fld.topic, appConfig.MQTT.QoS, true, fmt.Sprintf("%.02f", val.Ieee32))
+		token := client.Publish(fld.topic, appConfig.MQTT.QoS, true, fmt.Sprintf("%.02f", val.Ieee32))
 		token.Wait()
 	}
 	return nil
@@ -40,14 +44,37 @@ func startRecording() {
 	mqOpts := mqtt.NewClientOptions()
 	mqOpts.AddBroker(fmt.Sprintf("tcp://%s:%d", appConfig.MQTT.Host, appConfig.MQTT.Port))
 
-	mqttClient = mqtt.NewClient(mqOpts)
-	if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
-		log.Printf("Unable to connect to the MQTT server on bob: %v\n", token.Error())
-		mqttClient = nil
-	}
+	const retryDelay = 5 * time.Second
+	var (
+		nextConnectAttempt time.Time
+		registeredHA       bool
+	)
 
-	registerHA()
 	for {
+		if mqttClient == nil {
+			mqttClient = mqtt.NewClient(mqOpts)
+			registeredHA = false
+			nextConnectAttempt = time.Time{}
+		}
+
+		if !mqttClient.IsConnected() && time.Now().After(nextConnectAttempt) {
+			token := mqttClient.Connect()
+			if token.Wait() && token.Error() != nil {
+				log.Printf("Unable to connect to the MQTT server at %s:%d: %v. Retrying in %s",
+					appConfig.MQTT.Host, appConfig.MQTT.Port, token.Error(), retryDelay)
+				nextConnectAttempt = time.Now().Add(retryDelay)
+			} else {
+				log.Printf("Connected to the MQTT server at %s:%d",
+					appConfig.MQTT.Host, appConfig.MQTT.Port)
+				registeredHA = false
+			}
+		}
+
+		if mqttClient.IsConnected() && !registeredHA {
+			registerHA()
+			registeredHA = true
+		}
+
 		if err := execute(); err != nil {
 			break
 		}
@@ -56,6 +83,10 @@ func startRecording() {
 }
 
 func registerHA() {
+	client := mqttClient
+	if client == nil || !client.IsConnected() {
+		return
+	}
 	type hassAdvert struct {
 		Name              string `json:"name"`
 		UniqueID          string `json:"unique_id"`
@@ -78,7 +109,7 @@ func registerHA() {
 			log.Printf("Unable to encode HA json: %s", err)
 			continue
 		}
-		mqttClient.Publish(fmt.Sprintf("%s/sensor/%s/%d/config", appConfig.MQTT.HassdiscoveryPrefix,
+		client.Publish(fmt.Sprintf("%s/sensor/%s/%d/config", appConfig.MQTT.HassdiscoveryPrefix,
 			appConfig.Name, fld.Idx), appConfig.MQTT.QoS, true, jsonBytes)
 	}
 }
