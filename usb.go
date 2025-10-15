@@ -20,7 +20,7 @@ var (
 func findUSBSerialDevices() {
 	files, err := filepath.Glob(filepath.Join(DEV_PATH, "usb*"))
 	if err != nil {
-		log.Fatal("No USB devices available: %v", err)
+		log.Fatalf("No USB devices available: %v", err)
 	}
 
 	for _, poss := range files {

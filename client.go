@@ -104,10 +104,10 @@ func deviceActionFromConfig(rng regRange) (*deviceAction, error) {
 	sType, startReg := getRegisterType(rng.Start)
 	fType, finishReg := getRegisterType(rng.Finish)
 	if sType != fType {
-		return nil, fmt.Errorf("Range types do not match. %d vs %d", sType, fType)
+		return nil, fmt.Errorf("range types do not match. %d vs %d", sType, fType)
 	}
 	if finishReg < startReg {
-		return nil, fmt.Errorf("Finish register was lower than start register??? %d vs %d", startReg, finishReg)
+		return nil, fmt.Errorf("finish register was lower than start register??? %d vs %d", startReg, finishReg)
 	}
 	delay := defaultDelay
 	if rng.Delay > 0 {

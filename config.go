@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -57,7 +57,7 @@ var appConfig configData
 func parseConfiguration(cfgFn string) (err error) {
 	appConfig.MQTT.QoS = 0
 
-	cfgData, err := ioutil.ReadFile(cfgFn)
+	cfgData, err := os.ReadFile(cfgFn)
 	if err != nil {
 		return
 	}

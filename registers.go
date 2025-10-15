@@ -39,7 +39,7 @@ func makeRegisterAccess(reader registerReader, writer registerWriter) *registerA
 func addStandardDevice(deviceNum byte) error {
 	_, ck := devices[deviceNum]
 	if ck {
-		return fmt.Errorf("Device %d already registered?", deviceNum)
+		return fmt.Errorf("device %d already registered?", deviceNum)
 	}
 	devices[deviceNum] = make(map[byte]*registerAccess)
 	devices[deviceNum][3] = makeRegisterAccess(readRegisters, writeRegisters)
